@@ -48,10 +48,16 @@ public:
 
 	virtual void AddReferencedObjects(FReferenceCollector& Collector) override;
 
+public:
+
+	TSharedPtr<class IDetailsView> GetPropertyView() { return MainPropertyView; };
+
 protected:
 
 	TSharedRef<SDockTab> SpawnTab_Viewport(const FSpawnTabArgs& Args);
 	TSharedRef<SDockTab> SpawnTab_Details(const FSpawnTabArgs& Args);
+
+	void OnPropertyChanged(const FPropertyChangedEvent& PropertyChangedEvent);
 
 private:
 
@@ -59,4 +65,7 @@ private:
 	USmartUV_Asset* SmartUV_Asset;
 
 	TSharedPtr<SSmartUV_EditorViewport> ViewportPtr;
+
+	// The editors property view
+	TSharedPtr<class IDetailsView> MainPropertyView;
 };

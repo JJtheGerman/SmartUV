@@ -21,60 +21,32 @@ public:
 	virtual FLinearColor GetBackgroundColor() const override;
 	// End of FEditorViewportClient interface
 
-	// FSerializableObject interface
-	virtual void AddReferencedObjects(FReferenceCollector& Collector) override;
-	// End of FSerializableObject interface
-
-	// Called to request a focus on the current selection
-	virtual void RequestFocusOnSelection(bool bInstant);
-
-	/** Modifies the checkerboard texture's data */
-	void ModifyCheckerboardTextureColors();
-
-	void SetZoomPos(FVector2D InNewPos, float InNewZoom)
-	{
-		ZoomPos = InNewPos;
-		ZoomAmount = InNewZoom;
-	}
-
 	ESmartUVEditorMode::Type GetCurrentMode()
 	{
 		return CurrentMode;
 	};
 
-private:
-
-	/** Initialize the checkerboard texture for the texture preview, if necessary */
-	void SetupCheckerboardTexture(const FColor& ColorOne, const FColor& ColorTwo, int32 CheckerSize);
-
-	/** Destroy the checkerboard texture if one exists */
-	void DestroyCheckerboardTexture();
+	void UpdatePreviewMaterial(class UTexture* InTexture);
 
 protected:
 
 	void DrawSelectionRectangles(FViewport* Viewport, FCanvas* Canvas);
 
-	virtual FBox GetDesiredFocusBounds() const
-	{
-		return FBox(ForceInitToZero);
-	}
-
-protected:
-
-	/** Checkerboard texture */
-	UTexture2D* CheckerboardTexture;
-	FVector2D ZoomPos;
-	float ZoomAmount;
-
 private:
-
-	// Should we zoom to the focus bounds next tick?
-	bool bDeferZoomToSprite;
-	bool bDeferZoomToSpriteIsInstant;
 
 	// Current editor mode
 	ESmartUVEditorMode::Type CurrentMode;
 
 	// The preview scene
 	FPreviewScene OwnedPreviewScene;
+
+	// The preview material used by the mesh plane
+	class UMaterial* PreviewMaterial;
+
+	class UStaticMeshComponent* PreviewPlaneMesh;
+
+	// Pointer back to the owning SmartUV editor
+	TSharedPtr<FSmartUV_AssetEditorToolkit> SmartUV_EditorPtr;
+
+	class UMaterialInstanceDynamic* DynamicPreviewMaterial;
 };

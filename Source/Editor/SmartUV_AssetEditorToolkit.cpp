@@ -64,6 +64,8 @@ public:
 		return EditorViewportClient->GetCurrentMode();
 	}
 
+	TSharedPtr<FSmartUV_EditorViewportClient> GetEditorViewportClient() { return EditorViewportClient; };
+
 private:
 
 	// Pointer back to owning SmartUV editor instance
@@ -94,8 +96,7 @@ void FSmartUV_AssetEditorToolkit::Initialize(USmartUV_Asset* InSmartMaterialAsse
 	SmartUV_Asset = InSmartMaterialAsset;
 
 	// Init viewport
-	TSharedPtr<FSmartUV_AssetEditorToolkit> SmartUV_EditorPtr = SharedThis(this);
-	ViewportPtr = SNew(SSmartUV_EditorViewport, SmartUV_EditorPtr);
+	ViewportPtr = SNew(SSmartUV_EditorViewport, SharedThis(this));
 
 	// create default tab layout
 	const TSharedRef<FTabManager::FLayout> Layout = FTabManager::NewLayout("Standalone_SmartUVAssetEditor_Layout")
@@ -221,9 +222,11 @@ TSharedRef<SDockTab> FSmartUV_AssetEditorToolkit::SpawnTab_Details(const FSpawnT
 	TSharedPtr<FSmartUV_AssetEditorToolkit> SmartUV_EditorPtr = SharedThis(this);
 
 	FPropertyEditorModule& PropertyModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>("PropertyEditor");
-	FDetailsViewArgs DetailsViewArgs;
-	TSharedPtr<class IDetailsView> MainPropertyView = PropertyModule.CreateDetailView(DetailsViewArgs);
+	MainPropertyView = PropertyModule.CreateDetailView(FDetailsViewArgs());
 	MainPropertyView->SetObject(SmartUV_Asset);
+
+	// Delegate when properties are changed
+	MainPropertyView->OnFinishedChangingProperties().AddRaw(this, &FSmartUV_AssetEditorToolkit::OnPropertyChanged);
 
 	// The SmartUV details tab
 	return SNew(SDockTab)
@@ -231,6 +234,19 @@ TSharedRef<SDockTab> FSmartUV_AssetEditorToolkit::SpawnTab_Details(const FSpawnT
 		[
 			MainPropertyView.ToSharedRef()
 		];
+}
+
+void FSmartUV_AssetEditorToolkit::OnPropertyChanged(const FPropertyChangedEvent& PropertyChangedEvent)
+{
+	FProperty* Property = PropertyChangedEvent.Property;
+	if (Property)
+	{
+		// Change the editor viewports preview texture
+		if (Property->GetFName() == GET_MEMBER_NAME_CHECKED(USmartUV_Asset, PreviewTexture))
+		{
+			ViewportPtr->GetEditorViewportClient()->UpdatePreviewMaterial(SmartUV_Asset->PreviewTexture);
+		}
+	}
 }
 
 #undef LOCTEXT_NAMESPACE
