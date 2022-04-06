@@ -50,6 +50,10 @@ public:
 	virtual TSharedRef<FEditorViewportClient> MakeEditorViewportClient() override
 	{
 		EditorViewportClient = MakeShareable(new FSmartUV_EditorViewportClient());
+
+		// Refresh the editor on startup in case a preview texture is already set
+		RefreshPreviewTexture();
+
 		return EditorViewportClient.ToSharedRef();
 	}
 
@@ -58,6 +62,14 @@ public:
 		return EVisibility::Visible;
 	}
 	// End of SEditorViewport interface
+
+	void RefreshPreviewTexture()
+	{
+		if (UTexture* ActiveAsset = SmartUV_EditorPtr.Pin()->SmartUV_Asset->PreviewTexture)
+		{
+			EditorViewportClient->UpdatePreviewMaterial(ActiveAsset);
+		}
+	}
 
 	ESmartUVEditorMode::Type GetCurrentMode() const
 	{

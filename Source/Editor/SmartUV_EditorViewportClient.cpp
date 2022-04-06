@@ -41,6 +41,10 @@ FSmartUV_EditorViewportClient::FSmartUV_EditorViewportClient(const TWeakPtr<SEdi
 		// Create a dynamic preview material instance for the plane
 		DynamicPreviewMaterial = UMaterialInstanceDynamic::Create(PreviewMaterial, GetTransientPackage());
 	}
+
+	// We want the viewport to be realtime so it reacts to changes of the preview material.
+	// Didn't find anything in the base class similar to Redraw, Refresh or MarkRenderStateDirty so this will do
+	AddRealtimeOverride(true, FText::FromString("Realtime"));
 }
 
 FLinearColor FSmartUV_EditorViewportClient::GetBackgroundColor() const

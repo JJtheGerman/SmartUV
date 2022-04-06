@@ -52,6 +52,9 @@ public:
 
 	TSharedPtr<class IDetailsView> GetPropertyView() { return MainPropertyView; };
 
+	// The SmartMaterial being edited
+	USmartUV_Asset* SmartUV_Asset;
+
 protected:
 
 	TSharedRef<SDockTab> SpawnTab_Viewport(const FSpawnTabArgs& Args);
@@ -60,9 +63,6 @@ protected:
 	void OnPropertyChanged(const FPropertyChangedEvent& PropertyChangedEvent);
 
 private:
-
-	// The SmartMaterial being edited
-	USmartUV_Asset* SmartUV_Asset;
 
 	TSharedPtr<SSmartUV_EditorViewport> ViewportPtr;
 
