@@ -10,6 +10,7 @@ struct FSmartUV_Island
 {
 	GENERATED_BODY()
 
+	// Positions in UVSpace 0-1
 	FVector2D BottomLeft;
 	FVector2D TopRight;
 };

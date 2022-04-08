@@ -15,6 +15,7 @@ public:
 
 	// FViewportClient interface
 	virtual void Tick(float DeltaSeconds) override;
+	virtual void DrawCanvas(FViewport& InViewport, FSceneView& View, FCanvas& Canvas) override;
 	// End of FViewportClient interface
 
 	// FEditorViewportClient interface
@@ -33,6 +34,9 @@ public:
 protected:
 
 	void DrawSelectionRectangles(FViewport* Viewport, FCanvas* Canvas);
+
+	FIntPoint ProjectWorldLocationToScreen(class FEditorViewportClient* InViewportClient, FVector InWorldSpaceLocation, bool InClampValues);
+	FSceneView* GetSceneView(class FEditorViewportClient* InViewportClient);
 
 private:
 
