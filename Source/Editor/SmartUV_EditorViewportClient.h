@@ -28,6 +28,8 @@ public:
 
 	void UpdatePreviewMaterial(class UTexture* InTexture);
 
+	void AddBoxButtonClicked();
+
 protected:
 
 	void DrawSelectionRectangles(FViewport* Viewport, FCanvas* Canvas);

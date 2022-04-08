@@ -60,6 +60,8 @@ protected:
 	TSharedRef<SDockTab> SpawnTab_Viewport(const FSpawnTabArgs& Args);
 	TSharedRef<SDockTab> SpawnTab_Details(const FSpawnTabArgs& Args);
 
+	void ExtendToolbar();
+	void CreateModeToolbarWidgets(FToolBarBuilder& IgnoredBuilder);
 	void OnPropertyChanged(const FPropertyChangedEvent& PropertyChangedEvent);
 
 private:

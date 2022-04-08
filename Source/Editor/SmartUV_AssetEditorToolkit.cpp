@@ -12,6 +12,8 @@
 #include "Asset/SmartUV_Asset.h"
 #include "Editor/SSmartUV_AssetEditor.h"
 #include "Editor/SmartUV_EditorViewportClient.h"
+#include "Editor/SmartUV_EditorCommands.h"
+#include "SmartUV_Module.h"
 
 #define LOCTEXT_NAMESPACE "FSmartUV_AssetEditorToolkit"
 
@@ -44,6 +46,18 @@ public:
 	{
 		SmartUV_EditorPtr = InSmartUVEditor;
 		SEditorViewport::Construct(SEditorViewport::FArguments());
+	}
+
+	void BindCommands()
+	{
+		SEditorViewport::BindCommands();
+
+		TSharedRef<FSmartUV_EditorViewportClient> EditorViewportClientRef = EditorViewportClient.ToSharedRef();		
+
+		// Map command button
+		CommandList->MapAction(
+			FSmartUVEditorCommands::Get().AddBox,
+			FExecuteAction::CreateSP(EditorViewportClientRef, &FSmartUV_EditorViewportClient::AddBoxButtonClicked));
 	}
 
 	// SEditorViewport interface
@@ -96,7 +110,7 @@ FSmartUV_AssetEditorToolkit::~FSmartUV_AssetEditorToolkit()
 {
 	FReimportManager::Instance()->OnPreReimport().RemoveAll(this);
 	FReimportManager::Instance()->OnPostReimport().RemoveAll(this);
-
+	FSmartUVEditorCommands::Unregister();
 	GEditor->UnregisterForUndo(this);
 }
 
@@ -106,6 +120,9 @@ FSmartUV_AssetEditorToolkit::~FSmartUV_AssetEditorToolkit()
 void FSmartUV_AssetEditorToolkit::Initialize(USmartUV_Asset* InSmartMaterialAsset, const EToolkitMode::Type InMode, const TSharedPtr<IToolkitHost>& InToolkitHost)
 {
 	SmartUV_Asset = InSmartMaterialAsset;
+
+	//Register the editor command singleton
+	FSmartUVEditorCommands::Register();
 
 	// Init viewport
 	ViewportPtr = SNew(SSmartUV_EditorViewport, SharedThis(this));
@@ -152,6 +169,12 @@ void FSmartUV_AssetEditorToolkit::Initialize(USmartUV_Asset* InSmartMaterialAsse
 		true,
 		true,
 		InSmartMaterialAsset);
+
+	// Build the toolbar at the top that lets you add new boxes e.g
+	ExtendToolbar();
+
+	// We need to regenerate everything for anything to show
+	RegenerateMenusAndToolbars();
 }
 
 ESmartUVEditorMode::Type FSmartUV_AssetEditorToolkit::GetCurrentMode() const
@@ -246,6 +269,25 @@ TSharedRef<SDockTab> FSmartUV_AssetEditorToolkit::SpawnTab_Details(const FSpawnT
 		[
 			MainPropertyView.ToSharedRef()
 		];
+}
+
+void FSmartUV_AssetEditorToolkit::ExtendToolbar()
+{
+	TSharedPtr<FExtender> ToolbarExtender = MakeShareable(new FExtender);
+	ToolbarExtender->AddToolBarExtension(
+		"Asset",
+		EExtensionHook::Before,
+		ViewportPtr->GetCommandList(),
+		FToolBarExtensionDelegate::CreateRaw(this, &FSmartUV_AssetEditorToolkit::CreateModeToolbarWidgets));
+
+	AddToolbarExtender(ToolbarExtender);
+}
+
+void FSmartUV_AssetEditorToolkit::CreateModeToolbarWidgets(FToolBarBuilder& IgnoredBuilder)
+{
+	FSlimHorizontalToolBarBuilder ToolbarBuilder(ViewportPtr->GetCommandList(), FMultiBoxCustomization::None);
+	ToolbarBuilder.AddToolBarButton(FSmartUVEditorCommands::Get().AddBox);
+	AddToolbarWidget(ToolbarBuilder.MakeWidget());
 }
 
 void FSmartUV_AssetEditorToolkit::OnPropertyChanged(const FPropertyChangedEvent& PropertyChangedEvent)

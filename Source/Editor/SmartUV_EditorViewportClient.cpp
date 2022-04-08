@@ -68,3 +68,8 @@ void FSmartUV_EditorViewportClient::UpdatePreviewMaterial(UTexture* InTexture)
 	DynamicPreviewMaterial->SetTextureParameterValue(FName(TEXT("Texture")), InTexture);
 	PreviewPlaneMesh->SetMaterial(0, DynamicPreviewMaterial);
 }
+
+void FSmartUV_EditorViewportClient::AddBoxButtonClicked()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Test button!"));
+}

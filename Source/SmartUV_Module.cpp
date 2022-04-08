@@ -21,6 +21,8 @@ void FSmartUV_Module::OnPostEngineInit()
 	// Register asset types
 	IAssetTools& AssetTools = FModuleManager::LoadModuleChecked<FAssetToolsModule>("AssetTools").Get();
 	RegisterAssetTypeAction(AssetTools, MakeShareable(new FSmartUV_AssetActions()));
+
+	SmartUVEditor_ToolBarExtensibilityManager = MakeShareable(new FExtensibilityManager());
 }
 
 void FSmartUV_Module::RegisterAssetTypeAction(IAssetTools& AssetTools, TSharedRef<IAssetTypeActions> Action)
@@ -35,6 +37,7 @@ bool FSmartUV_Module::SupportsDynamicReloading()
 
 void FSmartUV_Module::ShutdownModule()
 {
+	SmartUVEditor_ToolBarExtensibilityManager.Reset();
 }
 
 #undef LOCTEXT_NAMESPACE

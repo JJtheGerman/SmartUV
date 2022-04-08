@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "Modules/ModuleManager.h"
 
+#define SMARTUV_EDITOR_MODULE_NAME "SmartUV"
+
 class FSmartUV_Module : public IModuleInterface
 {
 public:
@@ -20,6 +22,6 @@ public:
 
 	void RegisterAssetTypeAction(class IAssetTools& AssetTools, TSharedRef<class IAssetTypeActions> Action);
 
-	/** Holds the plug-ins style set. */
-	TSharedPtr<class ISlateStyle> Style;
+	virtual TSharedPtr<class FExtensibilityManager> GetSmartUVEditorMenuExtensibilityManager() { return SmartUVEditor_ToolBarExtensibilityManager; }
+	TSharedPtr<FExtensibilityManager> SmartUVEditor_ToolBarExtensibilityManager;
 };
