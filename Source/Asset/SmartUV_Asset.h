@@ -11,7 +11,9 @@ struct FSmartUV_Island
 	GENERATED_BODY()
 
 	// Positions in UVSpace 0-1
+	UPROPERTY(EditAnywhere)
 	FVector2D BottomLeft;
+	UPROPERTY(EditAnywhere)
 	FVector2D TopRight;
 };
 
@@ -24,7 +26,7 @@ class SMARTUV_API USmartUV_Asset : public UObject
 public:
 
 	/** Holds the stored UV islands. */
-	UPROPERTY()
+	UPROPERTY(EditAnywhere)
 	TArray<FSmartUV_Island> UVIslands;
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "General")

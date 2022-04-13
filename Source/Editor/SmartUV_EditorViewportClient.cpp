@@ -8,9 +8,11 @@
 #include "Asset/SmartUV_Asset.h"
 #include "CanvasItem.h"
 
+IMPLEMENT_HIT_PROXY(HIslandSelectableObjectHitProxy, HHitProxy)
 
-FSmartUV_EditorViewportClient::FSmartUV_EditorViewportClient(const TWeakPtr<SEditorViewport>& InEditorViewportWidget)
+FSmartUV_EditorViewportClient::FSmartUV_EditorViewportClient(const TWeakPtr<SEditorViewport>& InEditorViewportWidget, const TSharedPtr<FSmartUV_AssetEditorToolkit> InToolkit)
 	: FEditorViewportClient(nullptr, nullptr, InEditorViewportWidget)
+	,SmartUV_EditorPtr(InToolkit)
 {
 	SetViewModes(VMI_Lit, VMI_Lit);
 	SetViewportType(LVT_OrthoXY);
@@ -62,52 +64,69 @@ void FSmartUV_EditorViewportClient::Tick(float DeltaSeconds)
 
 void FSmartUV_EditorViewportClient::DrawCanvas(FViewport& InViewport, FSceneView& View, FCanvas& Canvas)
 {
-	//TArray<FSmartUV_Island> UVIslands = SmartUV_EditorPtr->SmartUV_Asset->UVIslands;
-
-	//for (FSmartUV_Island UVIsland : UVIslands)
-	//{
-	//	for (int VertexIndex = 0; VertexIndex < 4; ++VertexIndex)
-	//	{
-	//		const int NextVertexIndex = (VertexIndex + 1) % 4;
-
-
-
-	//		FCanvasLineItem LineItem(BoundsVertices[VertexIndex], BoundsVertices[NextVertexIndex]);
-	//		LineItem.SetColor(FLinearColor::White);
-	//		Canvas.DrawItem(LineItem);
-	//	}
-	//}
-
-	// World space
-	const FVector2D BottomLeft(10,10);
-	const FVector2D TopRight(90,90);
-
-	// Vertices of a box in World space
-	TArray<FVector> BoxWorldSpace;
+	const bool bIsHitTesting = Canvas.IsHitTesting();
+	if (!bIsHitTesting)
 	{
-		BoxWorldSpace.Add(FVector(BottomLeft.X, BottomLeft.Y, 0.f)); // BottomLeft
-		BoxWorldSpace.Add(FVector(TopRight.X, BottomLeft.Y, 0.f));   // BottomRight
-		BoxWorldSpace.Add(FVector(TopRight.X, TopRight.Y, 0.f));     // TopRight
-		BoxWorldSpace.Add(FVector(BottomLeft.X, TopRight.Y, 0.f));   // TopLeft
+		Canvas.SetHitProxy(nullptr);
 	}
 
-	TArray<FVector2D> BoxScreenSpace;
+	// Draw each island in the asset
+	TArray<FSmartUV_Island> UVIslands = SmartUV_EditorPtr->SmartUV_Asset->UVIslands;
+	for (FSmartUV_Island UVIsland : UVIslands)
 	{
-		BoxScreenSpace.Add((ProjectWorldLocationToScreen(this, BoxWorldSpace[0], false)));
-		BoxScreenSpace.Add((ProjectWorldLocationToScreen(this, BoxWorldSpace[1], false)));
-		BoxScreenSpace.Add((ProjectWorldLocationToScreen(this, BoxWorldSpace[2], false)));
-		BoxScreenSpace.Add((ProjectWorldLocationToScreen(this, BoxWorldSpace[3], false)));
-	}
+		UVIslandRect Island = UVIslandRect(UVIsland);
+		TArray<FVector> Vertices = Island.GetIslandVertices(Island.ConvertToWSCoords());
 
-	for (int VertexIndex = 0; VertexIndex < 4; VertexIndex++)
-	{
-		const int NewVertexIndex = (VertexIndex + 1) % 4;
+		TArray<FVector2D> UVScreenspace;
+		for (auto Vertex : Vertices)
+		{
+			UVScreenspace.Add(ProjectWorldLocationToScreen(this, Vertex));
+		}
 
-		// Draw lines
-		//FCanvasLineItem LineItem(FVector2D(200, 500), FVector2D(900, 500));
-		FCanvasLineItem LineItem(BoxScreenSpace[VertexIndex], BoxScreenSpace[NewVertexIndex]);
-		LineItem.SetColor(FLinearColor::White);
-		Canvas.DrawItem(LineItem);
+		for (int VertexIndex = 0; VertexIndex < 4; VertexIndex++)
+		{
+			const int NewVertexIndex = (VertexIndex + 1) % 4;
+
+			// Draw lines
+			FCanvasLineItem LineItem(UVScreenspace[VertexIndex], UVScreenspace[NewVertexIndex]);
+			LineItem.SetColor(FLinearColor::White);
+			Canvas.DrawItem(LineItem);
+
+			// Draw Corners
+			const FVector2D VertBoxSize = FVector2D(5);
+			FVector2D VertexBoxPos = UVScreenspace[VertexIndex];
+			VertexBoxPos.X -= VertBoxSize.X / 2; // Offset position so the vert is in the middle
+			VertexBoxPos.Y -= VertBoxSize.X / 2;
+
+			FCanvasBoxItem BoxItem(VertexBoxPos, VertBoxSize);
+			BoxItem.SetColor(FLinearColor(1,1,1,0.99f));
+			BoxItem.LineThickness = 5.f;
+			Canvas.DrawItem(BoxItem);
+
+			{
+				// Add corner hit proxy
+				const FVector2D CornerPoint = UVScreenspace[VertexIndex];
+				const float CornerCollisionVertexSize = 8.0f;
+
+				if (bIsHitTesting)
+				{					
+					TSharedPtr<FSelectedItem> Data = MakeShareable(new FSelectedItem());
+					Data->VertexIndex = VertexIndex;
+					Canvas.SetHitProxy(new HIslandSelectableObjectHitProxy(Data));
+				}
+
+				Canvas.DrawTile(CornerPoint.X - CornerCollisionVertexSize * 0.5f, CornerPoint.Y - CornerCollisionVertexSize * 0.5f, CornerCollisionVertexSize, CornerCollisionVertexSize, 0.f, 0.f, 1.f, 1.f, FLinearColor::White, GWhiteTexture);
+
+				if (bIsHitTesting)
+				{
+					Canvas.SetHitProxy(nullptr);
+				}
+
+				TSharedPtr<FSelectedItem> Data = MakeShareable(new FSelectedItem());
+				Canvas.SetHitProxy(new HIslandSelectableObjectHitProxy(Data));
+			}
+		}
+
 	}
 
 	// Call to parent
@@ -119,7 +138,7 @@ void FSmartUV_EditorViewportClient::DrawSelectionRectangles(FViewport* InViewpor
 	//	Canvas->DrawTile(X, Y, W, H, 0, 0, 1, 1, Rect.Color, GWhiteTexture, bAlphaBlend);
 }
 
-FIntPoint FSmartUV_EditorViewportClient::ProjectWorldLocationToScreen(class FEditorViewportClient* InViewportClient, FVector InWorldSpaceLocation, bool InClampValues)
+FIntPoint FSmartUV_EditorViewportClient::ProjectWorldLocationToScreen(class FEditorViewportClient* InViewportClient, FVector InWorldSpaceLocation)
 {
 	FSceneView* View = GetSceneView(InViewportClient);
 
@@ -127,20 +146,11 @@ FIntPoint FSmartUV_EditorViewportClient::ProjectWorldLocationToScreen(class FEdi
 	FMatrix const ViewProjectionMatrix = View->ViewMatrices.GetViewProjectionMatrix();
 	View->ProjectWorldToScreen(InWorldSpaceLocation, View->UnscaledViewRect, ViewProjectionMatrix, OutScreenPos);
 
-	//Clamp Values because ProjectWorldToScreen can give you negative values...
-	if (InClampValues)
-	{
-		FIntPoint ViewportResolution = InViewportClient->Viewport->GetSizeXY();
-		OutScreenPos.X = FMath::Clamp((int32)OutScreenPos.X, 0, ViewportResolution.X);
-		OutScreenPos.Y = FMath::Clamp((int32)OutScreenPos.Y, 0, ViewportResolution.Y);
-	}
-
 	return FIntPoint(OutScreenPos.X, OutScreenPos.Y);
 }
 
 FSceneView* FSmartUV_EditorViewportClient::GetSceneView(class FEditorViewportClient* InViewportClient)
 {
-	FViewportCursorLocation MousePosition = InViewportClient->GetCursorWorldLocationFromMousePos();
 	FSceneViewFamilyContext ViewFamily(FSceneViewFamily::ConstructionValues(
 		InViewportClient->Viewport,
 		InViewportClient->GetScene(),
@@ -160,5 +170,9 @@ void FSmartUV_EditorViewportClient::UpdatePreviewMaterial(UTexture* InTexture)
 
 void FSmartUV_EditorViewportClient::AddBoxButtonClicked()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Test button!"));
+	FSmartUV_Island newIsland = FSmartUV_Island();
+	newIsland.BottomLeft = FVector2D(-1, -1);
+	newIsland.TopRight = FVector2D(0, 0);
+	SmartUV_EditorPtr->SmartUV_Asset->UVIslands.Add(newIsland);
+	UE_LOG(LogTemp, Warning, TEXT("New island added!"));
 }

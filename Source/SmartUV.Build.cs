@@ -41,7 +41,10 @@ public class SmartUV : ModuleRules
                 "EditorStyle",
 				"PropertyEditor",
 				"InputCore",
+				"RenderCore",
 				"KismetWidgets",
+				"ComponentVisualizers",
+				"EditorFramework",
 			}
 			);
 		

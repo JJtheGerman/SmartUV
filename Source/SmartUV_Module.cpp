@@ -9,6 +9,8 @@
 #include "AssetActions/SmartUV_AssetActions.h"
 #include "Asset/SmartUV_Asset.h"
 
+#include "Editor/SmartUV_EditMode.h"
+
 #define LOCTEXT_NAMESPACE "FSmartUV_Module"
 
 void FSmartUV_Module::StartupModule()

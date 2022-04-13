@@ -63,7 +63,7 @@ public:
 	// SEditorViewport interface
 	virtual TSharedRef<FEditorViewportClient> MakeEditorViewportClient() override
 	{
-		EditorViewportClient = MakeShareable(new FSmartUV_EditorViewportClient());
+		EditorViewportClient = MakeShareable(new FSmartUV_EditorViewportClient(nullptr, SmartUV_EditorPtr));
 
 		// Refresh the editor on startup in case a preview texture is already set
 		RefreshPreviewTexture();
@@ -79,7 +79,7 @@ public:
 
 	void RefreshPreviewTexture()
 	{
-		if (UTexture* ActiveAsset = SmartUV_EditorPtr.Pin()->SmartUV_Asset->PreviewTexture)
+		if (UTexture* ActiveAsset = SmartUV_EditorPtr->SmartUV_Asset->PreviewTexture)
 		{
 			EditorViewportClient->UpdatePreviewMaterial(ActiveAsset);
 		}
@@ -95,7 +95,7 @@ public:
 private:
 
 	// Pointer back to owning SmartUV editor instance
-	TWeakPtr<FSmartUV_AssetEditorToolkit> SmartUV_EditorPtr;
+	TSharedPtr<FSmartUV_AssetEditorToolkit> SmartUV_EditorPtr;
 
 	// Viewport client
 	TSharedPtr<FSmartUV_EditorViewportClient> EditorViewportClient;
@@ -184,7 +184,7 @@ ESmartUVEditorMode::Type FSmartUV_AssetEditorToolkit::GetCurrentMode() const
 
 FString FSmartUV_AssetEditorToolkit::GetDocumentationLink() const
 {
-	return FString(TEXT("https://google.com/"));
+	return FString(TEXT("https://github.com/JJtheGerman/SmartUV"));
 }
 
 void FSmartUV_AssetEditorToolkit::RegisterTabSpawners(const TSharedRef<FTabManager>& InTabManager)
