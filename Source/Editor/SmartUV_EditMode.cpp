@@ -14,11 +14,4 @@ FSmartUV_EditorMode::FSmartUV_EditorMode()
 		false);
 }
 
-// FEdMode: Called every frame as long as the Mode is active
-void FSmartUV_EditorMode::Tick(FEditorViewportClient* ViewportClient, float DeltaTime)
-{
-	UE_LOG(LogTemp, Warning, TEXT("SmartUV Mode called!"));
-}
-
-
 #undef LOCTEXT_NAMESPACE

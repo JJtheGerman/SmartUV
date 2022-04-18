@@ -28,7 +28,7 @@ bool FSmartUV_AssetActions::CanFilter()
 
 uint32 FSmartUV_AssetActions::GetCategories()
 {
-	return EAssetTypeCategories::Misc | EAssetTypeCategories::MaterialsAndTextures;
+	return EAssetTypeCategories::Misc | EAssetTypeCategories::Materials;
 }
 
 FText FSmartUV_AssetActions::GetName() const
