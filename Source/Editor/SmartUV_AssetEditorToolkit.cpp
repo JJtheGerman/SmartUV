@@ -79,7 +79,7 @@ public:
 
 	void RefreshPreviewTexture()
 	{
-		if (UTexture* ActiveAsset = SmartUV_EditorPtr->SmartUV_Asset->PreviewTexture)
+		if (UTexture* ActiveAsset = SmartUV_EditorPtr.Pin()->SmartUV_Asset->PreviewTexture)
 		{
 			EditorViewportClient->UpdatePreviewMaterial(ActiveAsset);
 		}
@@ -94,25 +94,15 @@ public:
 
 private:
 
-	// Pointer back to owning SmartUV editor instance
-	TSharedPtr<FSmartUV_AssetEditorToolkit> SmartUV_EditorPtr;
+	// Weak Pointer back to owning SmartUV editor instance
+	// Needs to be a weak pointer otherwise the Toolkit is deleted once the AssetEditor is closed and crashed next time you open it
+	TWeakPtr<FSmartUV_AssetEditorToolkit> SmartUV_EditorPtr;
 
 	// Viewport client
 	TSharedPtr<FSmartUV_EditorViewportClient> EditorViewportClient;
 };
 
 /////////////////////////////////////////////////////////////
-
-FSmartUV_AssetEditorToolkit::FSmartUV_AssetEditorToolkit()
-{}
-
-FSmartUV_AssetEditorToolkit::~FSmartUV_AssetEditorToolkit()
-{
-	FReimportManager::Instance()->OnPreReimport().RemoveAll(this);
-	FReimportManager::Instance()->OnPostReimport().RemoveAll(this);
-	FSmartUVEditorCommands::Unregister();
-	GEditor->UnregisterForUndo(this);
-}
 
 /* FSmartUV_AssetEditorToolkit interface
  *****************************************************************************/
@@ -190,7 +180,7 @@ FString FSmartUV_AssetEditorToolkit::GetDocumentationLink() const
 void FSmartUV_AssetEditorToolkit::RegisterTabSpawners(const TSharedRef<FTabManager>& InTabManager)
 {
 	WorkspaceMenuCategory = InTabManager->AddLocalWorkspaceMenuCategory(LOCTEXT("WorkspaceMenu_SmartUVEditor", "SmartUV Editor"));
-	auto WorkspaceMenuCategoryRef = WorkspaceMenuCategory.ToSharedRef();
+	const auto WorkspaceMenuCategoryRef = WorkspaceMenuCategory.ToSharedRef();
 
 	FAssetEditorToolkit::RegisterTabSpawners(InTabManager);
 
@@ -273,7 +263,7 @@ TSharedRef<SDockTab> FSmartUV_AssetEditorToolkit::SpawnTab_Details(const FSpawnT
 
 void FSmartUV_AssetEditorToolkit::ExtendToolbar()
 {
-	TSharedPtr<FExtender> ToolbarExtender = MakeShareable(new FExtender);
+	const TSharedPtr<FExtender> ToolbarExtender = MakeShareable(new FExtender);
 	ToolbarExtender->AddToolBarExtension(
 		"Asset",
 		EExtensionHook::Before,
@@ -292,15 +282,14 @@ void FSmartUV_AssetEditorToolkit::CreateModeToolbarWidgets(FToolBarBuilder& Igno
 
 void FSmartUV_AssetEditorToolkit::OnPropertyChanged(const FPropertyChangedEvent& PropertyChangedEvent)
 {
-	FProperty* Property = PropertyChangedEvent.Property;
-	if (Property)
+	const FProperty* Property = PropertyChangedEvent.Property;
+	
+	// Change the editor viewports preview texture
+	if (Property->GetFName() == GET_MEMBER_NAME_CHECKED(USmartUV_Asset, PreviewTexture))
 	{
-		// Change the editor viewports preview texture
-		if (Property->GetFName() == GET_MEMBER_NAME_CHECKED(USmartUV_Asset, PreviewTexture))
-		{
-			ViewportPtr->GetEditorViewportClient()->UpdatePreviewMaterial(SmartUV_Asset->PreviewTexture);
-		}
+		ViewportPtr->GetEditorViewportClient()->UpdatePreviewMaterial(SmartUV_Asset->PreviewTexture);
 	}
+	
 }
 
 #undef LOCTEXT_NAMESPACE

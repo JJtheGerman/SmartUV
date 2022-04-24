@@ -22,31 +22,32 @@ class FSmartUV_AssetEditorToolkit : public FAssetEditorToolkit, public FEditorUn
 {
 public:
 
-	FSmartUV_AssetEditorToolkit();
-	~FSmartUV_AssetEditorToolkit();
-
-public:
-
 	void Initialize(USmartUV_Asset* InSmartMaterialAsset, const EToolkitMode::Type InMode, const TSharedPtr<IToolkitHost>& InToolkitHost);
 
 	ESmartUVEditorMode::Type GetCurrentMode() const;
 
 public:
 
-	// FAssetEditorToolkit interface
+	// FAssetEditorToolkit Interface
 	virtual FString GetDocumentationLink() const override;
 	virtual void RegisterTabSpawners(const TSharedRef<FTabManager>& InTabManager) override;
 	virtual void UnregisterTabSpawners(const TSharedRef<FTabManager>& InTabManager) override;
-
-public:
-
-	// IToolkit interface
+	// FAssetEditorToolkit Interface
+	
+	// IToolkit Interface
 	virtual FText GetBaseToolkitName() const override;
 	virtual FName GetToolkitFName() const override;
 	virtual FLinearColor GetWorldCentricTabColorScale() const override;
 	virtual FString GetWorldCentricTabPrefix() const override;
-
 	virtual void AddReferencedObjects(FReferenceCollector& Collector) override;
+	// IToolkit Interface
+
+	// FGCObject Interface
+	virtual FString GetReferencerName() const override
+	{
+		return TEXT("FSmartUVEditor");
+	}
+	// FGCObject Interface
 
 public:
 

@@ -6,16 +6,13 @@
 
 #define LOCTEXT_NAMESPACE "AssetTypeActions"
 
-FSmartUV_AssetActions::FSmartUV_AssetActions()
-{}
-
 void FSmartUV_AssetActions::OpenAssetEditor(const TArray<UObject*>& InObjects, TSharedPtr<IToolkitHost> EditWithinLevelEditor)
 {
 	for (UObject* ObjectToEdit : InObjects)
 	{
 		if (USmartUV_Asset* SmartMaterialAsset = Cast<USmartUV_Asset>(ObjectToEdit))
 		{
-			TSharedRef<FSmartUV_AssetEditorToolkit> EditorToolkit = MakeShareable(new FSmartUV_AssetEditorToolkit());
+			const TSharedRef<FSmartUV_AssetEditorToolkit> EditorToolkit = MakeShareable(new FSmartUV_AssetEditorToolkit());
 			EditorToolkit->Initialize(SmartMaterialAsset, EToolkitMode::Standalone, EditWithinLevelEditor);
 		}
 	}

@@ -25,6 +25,13 @@ void FSmartUV_Module::OnPostEngineInit()
 	RegisterAssetTypeAction(AssetTools, MakeShareable(new FSmartUV_AssetActions()));
 
 	SmartUVEditor_ToolBarExtensibilityManager = MakeShareable(new FExtensibilityManager());
+
+	// Register edit mode that handles the asset editor
+	FEditorModeRegistry::Get().RegisterMode<FSmartUV_EditorMode>(
+		FSmartUV_EditorMode::EM_SmartUV_EditorModeID,
+		LOCTEXT("SmartUVEditMode", "SmartUV Editor"),
+		FSlateIcon(),
+		false);
 }
 
 void FSmartUV_Module::RegisterAssetTypeAction(IAssetTools& AssetTools, TSharedRef<IAssetTypeActions> Action)
@@ -39,7 +46,14 @@ bool FSmartUV_Module::SupportsDynamicReloading()
 
 void FSmartUV_Module::ShutdownModule()
 {
+	// Remove delegates
+	FCoreDelegates::OnPostEngineInit.RemoveAll(this);
+
+	// Reset Toolbars
 	SmartUVEditor_ToolBarExtensibilityManager.Reset();
+
+	// Unregister Edit Modes
+	FEditorModeRegistry::Get().UnregisterMode(FSmartUV_EditorMode::EM_SmartUV_EditorModeID);
 }
 
 #undef LOCTEXT_NAMESPACE
